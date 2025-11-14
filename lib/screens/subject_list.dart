@@ -6,189 +6,117 @@ class SubjectListPage extends StatefulWidget {
 }
 
 class _SubjectListPageState extends State<SubjectListPage> {
-  Map<String, List<Task>> subjects = {};
+  List<Map<String, dynamic>> subjects = [];
 
-  final TextEditingController _subjectController = TextEditingController();
-  final TextEditingController _taskController = TextEditingController();
+  TextEditingController subjectNameController = TextEditingController();
+  TextEditingController taskController = TextEditingController();
 
-  void _addSubject() {
+  void addSubjectDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Add Subject'),
+      builder: (_) => AlertDialog(
+        title: Text("Add Subject"),
         content: TextField(
-          controller: _subjectController,
-          decoration: InputDecoration(hintText: 'Enter subject name'),
+          controller: subjectNameController,
+          decoration: InputDecoration(labelText: "Subject Name"),
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _subjectController.clear();
-            },
-            child: Text('Cancel'),
-          ),
+              onPressed: () => Navigator.pop(context), child: Text("Cancel")),
           ElevatedButton(
             onPressed: () {
-              if (_subjectController.text.trim().isNotEmpty) {
+              if (subjectNameController.text.isNotEmpty) {
                 setState(() {
-                  subjects[_subjectController.text.trim()] = [];
+                  subjects
+                      .add({"name": subjectNameController.text, "tasks": []});
                 });
+                subjectNameController.clear();
+                Navigator.pop(context);
               }
-              Navigator.pop(context);
-              _subjectController.clear();
             },
-            child: Text('Add'),
+            child: Text("Add"),
           ),
         ],
       ),
     );
   }
 
-  void _addTask(String subject) {
+  void addTaskDialog(int index) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Add Task to $subject'),
+      builder: (_) => AlertDialog(
+        title: Text("Add Task for ${subjects[index]['name']}"),
         content: TextField(
-          controller: _taskController,
-          decoration: InputDecoration(hintText: 'Enter task name'),
+          controller: taskController,
+          decoration: InputDecoration(labelText: "Task"),
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _taskController.clear();
-            },
-            child: Text('Cancel'),
-          ),
+              onPressed: () => Navigator.pop(context), child: Text("Cancel")),
           ElevatedButton(
             onPressed: () {
-              if (_taskController.text.trim().isNotEmpty) {
+              if (taskController.text.isNotEmpty) {
                 setState(() {
-                  subjects[subject]!
-                      .add(Task(title: _taskController.text.trim()));
+                  subjects[index]["tasks"].add(taskController.text);
                 });
+                taskController.clear();
+                Navigator.pop(context);
               }
-              Navigator.pop(context);
-              _taskController.clear();
             },
-            child: Text('Add'),
+            child: Text("Add Task"),
           ),
         ],
       ),
     );
-  }
-
-  void _deleteSubject(String subject) {
-    setState(() {
-      subjects.remove(subject);
-    });
-  }
-
-  void _deleteTask(String subject, Task task) {
-    setState(() {
-      subjects[subject]!.remove(task);
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Subjects & Tasks'),
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(
-                context); // Navigate back to previous screen (dashboard)
-          },
-        ),
+        title: Text("Subjects"),
+        leading: BackButton(color: Colors.white),
+        backgroundColor: Colors.blueAccent,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _addSubject,
+        onPressed: addSubjectDialog,
+        backgroundColor: Colors.blueAccent,
         child: Icon(Icons.add),
-        tooltip: 'Add Subject',
       ),
       body: subjects.isEmpty
           ? Center(
               child: Text(
-                'No subjects added.\nTap + to add a subject',
+                "No subjects yet.\nTap + to add one.",
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+                style: TextStyle(fontSize: 18),
               ),
             )
-          : ListView(
+          : ListView.builder(
               padding: EdgeInsets.all(16),
-              children: subjects.keys.map((subject) {
-                final tasks = subjects[subject]!;
+              itemCount: subjects.length,
+              itemBuilder: (context, index) {
                 return Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 3,
-                  margin: EdgeInsets.only(bottom: 16),
                   child: ExpansionTile(
-                    title: Text(subject,
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold)),
+                    title: Text(
+                      subjects[index]["name"],
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
                     children: [
-                      if (tasks.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text('No tasks added',
-                              style: TextStyle(color: Colors.grey)),
-                        ),
-                      ...tasks.map((task) => ListTile(
-                            leading: Checkbox(
-                              value: task.isDone,
-                              onChanged: (val) {
-                                setState(() {
-                                  task.isDone = val!;
-                                });
-                              },
-                            ),
-                            title: Text(
-                              task.title,
-                              style: TextStyle(
-                                decoration: task.isDone
-                                    ? TextDecoration.lineThrough
-                                    : null,
-                              ),
-                            ),
-                            trailing: IconButton(
-                              icon: Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _deleteTask(subject, task),
-                            ),
-                          )),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton.icon(
-                            icon: Icon(Icons.add),
-                            label: Text('Add Task'),
-                            onPressed: () => _addTask(subject),
-                          ),
-                          TextButton.icon(
-                            icon: Icon(Icons.delete),
-                            label: Text('Delete Subject'),
-                            onPressed: () => _deleteSubject(subject),
-                          ),
-                        ],
+                      ...subjects[index]["tasks"].map<Widget>((t) {
+                        return ListTile(
+                          title: Text(t),
+                        );
+                      }).toList(),
+                      TextButton(
+                        onPressed: () => addTaskDialog(index),
+                        child: Text("Add Task"),
                       )
                     ],
                   ),
                 );
-              }).toList(),
+              },
             ),
     );
   }
-}
-
-class Task {
-  String title;
-  bool isDone;
-
-  Task({required this.title, this.isDone = false});
 }
