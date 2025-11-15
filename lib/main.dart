@@ -17,73 +17,140 @@ class StudyBuddyApp extends StatelessWidget {
       title: 'Study Buddy',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Colors.grey[100],
+        scaffoldBackgroundColor: Color.fromARGB(202, 225, 225, 225),
       ),
-      home: DashboardScreen(),
+      home: DashboardWrapper(),
     );
   }
 }
 
-class DashboardScreen extends StatelessWidget {
-  final String username = "Hi, Student 👋";
+class DashboardWrapper extends StatefulWidget {
+  @override
+  _DashboardWrapperState createState() => _DashboardWrapperState();
+}
 
-  final List<_FeatureCard> _features = [
-    _FeatureCard(
-      title: 'Pomodoro',
-      icon: Icons.timer,
-      color: Colors.redAccent,
-      screen: PomodoroTimerPage(),
-    ),
-    _FeatureCard(
-      title: 'Subjects',
-      icon: Icons.book_outlined,
-      color: Colors.blueAccent,
-      screen: SubjectListPage(),
-    ),
-    _FeatureCard(
-      title: 'Session Log',
-      icon: Icons.list_alt,
-      color: Colors.orangeAccent,
-      screen: SessionLogPage(),
-    ),
-    _FeatureCard(
-      title: 'Progress',
-      icon: Icons.show_chart,
-      color: Colors.green,
-      screen: ProgressTrackerPage(),
-    ),
-    _FeatureCard(
-      title: 'Settings',
-      icon: Icons.settings,
-      color: Colors.purpleAccent,
-      screen: SettingsPage(),
-    ),
+class _DashboardWrapperState extends State<DashboardWrapper> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    DashboardScreen(),
+    SubjectListPage(),
+    ProgressTrackerPage(),
+    SettingsPage(),
+    PomodoroTimerPage(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      body: _pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() => _currentIndex = index);
+        },
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey.shade600,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined), label: "Home"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.book_outlined), label: "Subjects"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.show_chart), label: "Progress"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.settings), label: "Settings"),
+          BottomNavigationBarItem(icon: Icon(Icons.timer), label: "Timer"),
+        ],
+      ),
+    );
+  }
+}
+
+/// ------------------ UPDATED DASHBOARD WITH TOP MENU BAR ------------------
+
+class DashboardScreen extends StatelessWidget {
+  final String username = "Hi, Mechelle 👋";
+
+  final List<Map<String, dynamic>> subjects = [
+    {"title": "Math Homework", "done": false},
+    {"title": "Science Project", "done": true},
+    {"title": "Flutter App Task", "done": false},
+    {"title": "History Notes", "done": false},
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Map<String, dynamic>> pending =
+        subjects.where((s) => s["done"] == false).toList();
+
+    return Scaffold(
+      /// ---------------- TOP APP BAR MENU ----------------
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 2,
+        title: Text(
+          "Study Buddy",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+        ),
+        iconTheme: IconThemeData(color: Colors.black),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == "subjects") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => SubjectListPage()),
+                );
+              } else if (value == "progress") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => ProgressTrackerPage()),
+                );
+              } else if (value == "settings") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => SettingsPage()),
+                );
+              } else if (value == "timer") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => PomodoroTimerPage()),
+                );
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(value: "subjects", child: Text("Subjects")),
+              PopupMenuItem(value: "progress", child: Text("Progress")),
+              PopupMenuItem(value: "settings", child: Text("Settings")),
+              PopupMenuItem(value: "timer", child: Text("Pomodoro Timer")),
+            ],
+          )
+        ],
+      ),
+
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             SizedBox(height: 10),
 
-            /// CENTERED PROFILE SECTION
+            /// ---- PROFILE SECTION ----
             Center(
               child: Column(
                 children: [
                   CircleAvatar(
-                    radius: 45,
-                    backgroundColor: Colors.blue,
-                    child: Icon(Icons.person, size: 55, color: Colors.white),
+                    radius: 55,
+                    backgroundColor: Color.fromARGB(255, 106, 135, 203),
+                    child: Icon(Icons.person, size: 65, color: Colors.black54),
                   ),
-                  SizedBox(height: 12),
+                  SizedBox(height: 15),
                   Text(
                     username,
                     style: TextStyle(
-                      fontSize: 23,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
                   ),
@@ -91,108 +158,84 @@ class DashboardScreen extends StatelessWidget {
               ),
             ),
 
-            SizedBox(height: 30),
+            SizedBox(height: 35),
 
+            /// ---------------- REMINDERS SECTION ----------------
             Text(
-              "Your Features",
+              "Reminders",
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
               ),
             ),
 
-            SizedBox(height: 20),
+            SizedBox(height: 12),
 
-            /// --- 2 buttons per row ---
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                buildFeatureButton(context, _features[0]),
-                buildFeatureButton(context, _features[1]),
-              ],
-            ),
-
-            SizedBox(height: 16),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                buildFeatureButton(context, _features[2]),
-                buildFeatureButton(context, _features[3]),
-              ],
-            ),
-
-            SizedBox(height: 16),
-
-            /// LAST ONE CENTERED
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                buildFeatureButton(context, _features[4]),
-              ],
-            ),
-
-            SizedBox(height: 30),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Button Builder
-  Widget buildFeatureButton(BuildContext context, _FeatureCard feature) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => feature.screen),
-        );
-      },
-      child: Container(
-        width: 95,
-        height: 95,
-        decoration: BoxDecoration(
-          color: feature.color,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 4,
-              color: Colors.black26,
-              offset: Offset(0, 2),
-            )
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(feature.icon, size: 30, color: Colors.white),
-            SizedBox(height: 6),
-            Text(
-              feature.title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
+            Container(
+              padding: EdgeInsets.all(18),
+              decoration: BoxDecoration(
                 color: Colors.white,
-                fontWeight: FontWeight.bold,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: pending.isEmpty
+                  ? Center(
+                      child: Text(
+                        "🎉 All tasks completed! Great job!",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: pending.map((task) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            children: [
+                              Icon(Icons.circle,
+                                  size: 10, color: Colors.redAccent),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  task["title"],
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+            ),
+
+            SizedBox(height: 30),
+
+            /// --------------- MOTIVATION SECTION ---------------
+            Container(
+              padding: EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade100,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                "“Small progress is still progress. Keep going!” 💪",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontStyle: FontStyle.italic,
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
+
+            SizedBox(height: 30),
           ],
         ),
       ),
     );
   }
-}
-
-class _FeatureCard {
-  final String title;
-  final IconData icon;
-  final Color color;
-  final Widget screen;
-
-  _FeatureCard({
-    required this.title,
-    required this.icon,
-    required this.color,
-    required this.screen,
-  });
 }

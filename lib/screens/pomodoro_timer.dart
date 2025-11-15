@@ -28,7 +28,7 @@ class _PomodoroTimerPageState extends State<PomodoroTimerPage> {
             SizedBox(height: 30),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
+                backgroundColor: Color.fromARGB(255, 3, 107, 36),
                 padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
               ),
               onPressed: () {},
