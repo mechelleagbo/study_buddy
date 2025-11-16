@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/pomodoro_timer.dart';
 import 'screens/subject_list.dart';
-import 'screens/session_log.dart';
 import 'screens/progress_tracker.dart';
 import 'screens/settings_page.dart';
 
@@ -36,7 +35,6 @@ class _DashboardWrapperState extends State<DashboardWrapper> {
     DashboardScreen(),
     SubjectListPage(),
     ProgressTrackerPage(),
-    SettingsPage(),
     PomodoroTimerPage(),
   ];
 
@@ -59,8 +57,6 @@ class _DashboardWrapperState extends State<DashboardWrapper> {
               icon: Icon(Icons.book_outlined), label: "Subjects"),
           BottomNavigationBarItem(
               icon: Icon(Icons.show_chart), label: "Progress"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.settings), label: "Settings"),
           BottomNavigationBarItem(icon: Icon(Icons.timer), label: "Timer"),
         ],
       ),
@@ -68,7 +64,7 @@ class _DashboardWrapperState extends State<DashboardWrapper> {
   }
 }
 
-/// ------------------ UPDATED DASHBOARD WITH TOP MENU BAR ------------------
+/// ====================== DASHBOARD ===============================
 
 class DashboardScreen extends StatelessWidget {
   final String username = "Hi, Mechelle 👋";
@@ -86,48 +82,51 @@ class DashboardScreen extends StatelessWidget {
         subjects.where((s) => s["done"] == false).toList();
 
     return Scaffold(
-      /// ---------------- TOP APP BAR MENU ----------------
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 2,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu, color: Colors.black),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
         title: Text(
           "Study Buddy",
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
         ),
-        iconTheme: IconThemeData(color: Colors.black),
         actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == "subjects") {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => SubjectListPage()),
-                );
-              } else if (value == "progress") {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => ProgressTrackerPage()),
-                );
-              } else if (value == "settings") {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => SettingsPage()),
-                );
-              } else if (value == "timer") {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => PomodoroTimerPage()),
-                );
-              }
+          IconButton(
+            icon: Icon(Icons.settings_outlined, color: Colors.black87),
+            onPressed: () {
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (_) => SettingsPage()));
             },
-            itemBuilder: (context) => [
-              PopupMenuItem(value: "subjects", child: Text("Subjects")),
-              PopupMenuItem(value: "progress", child: Text("Progress")),
-              PopupMenuItem(value: "settings", child: Text("Settings")),
-              PopupMenuItem(value: "timer", child: Text("Pomodoro Timer")),
-            ],
-          )
+          ),
         ],
+      ),
+
+      /// ================= MINIMAL DRAWER + NEW MENU ITEMS ======================
+      drawer: Drawer(
+        width: 90,
+        child: Container(
+          color: Colors.white,
+          child: Column(
+            children: [
+              SizedBox(height: 50),
+
+              /// New menu items
+              _drawerIcon(context, Icons.calendar_today,
+                  PlaceholderPage("Study Planner")),
+              _drawerIcon(context, Icons.palette,
+                  PlaceholderPage("Appearance / Theme")),
+              _drawerIcon(
+                  context, Icons.backup, PlaceholderPage("Data & Backup")),
+              _drawerIcon(context, Icons.help_outline,
+                  PlaceholderPage("Help & Support")),
+            ],
+          ),
+        ),
       ),
 
       body: SafeArea(
@@ -135,8 +134,6 @@ class DashboardScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           children: [
             SizedBox(height: 10),
-
-            /// ---- PROFILE SECTION ----
             Center(
               child: Column(
                 children: [
@@ -157,20 +154,36 @@ class DashboardScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             SizedBox(height: 35),
-
-            /// ---------------- REMINDERS SECTION ----------------
-            Text(
-              "Reminders",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
+            Row(
+              children: [
+                Text(
+                  "Reminders",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(width: 10),
+                if (pending.isNotEmpty)
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      "${pending.length}",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-
             SizedBox(height: 12),
-
             Container(
               padding: EdgeInsets.all(18),
               decoration: BoxDecoration(
@@ -212,10 +225,7 @@ class DashboardScreen extends StatelessWidget {
                       }).toList(),
                     ),
             ),
-
             SizedBox(height: 30),
-
-            /// --------------- MOTIVATION SECTION ---------------
             Container(
               padding: EdgeInsets.all(18),
               decoration: BoxDecoration(
@@ -231,9 +241,44 @@ class DashboardScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-
             SizedBox(height: 30),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Drawer Icon Widget
+  Widget _drawerIcon(BuildContext context, IconData icon, Widget page) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 18),
+      child: GestureDetector(
+        child: Icon(icon, size: 32, color: Colors.black87),
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+        },
+      ),
+    );
+  }
+}
+
+/// Placeholder pages for new menu items
+class PlaceholderPage extends StatelessWidget {
+  final String title;
+  PlaceholderPage(this.title);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title, style: TextStyle(color: Colors.black)),
+        backgroundColor: Colors.white,
+        iconTheme: IconThemeData(color: Colors.black),
+      ),
+      body: Center(
+        child: Text(
+          "$title Page",
+          style: TextStyle(fontSize: 24),
         ),
       ),
     );
